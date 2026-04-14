@@ -1,85 +1,48 @@
-import React from 'react';
-import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { ProductGrid } from './components/ProductGrid';
-import { About } from './components/About';
-import { Testimonials } from './components/Testimonials';
-import { Footer } from './components/Footer';
-import { motion, useScroll, useSpring } from 'motion/react';
+import { createClient } from '@sanity/client';
+import { useEffect, useState } from 'react';
+
+// CONNECTING TO YOUR LUXURY DASHBOARD
+const client = createClient({
+  projectId: '2bua5qjw', 
+  dataset: 'production',
+  useCdn: true,
+  apiVersion: '2026-04-15',
+});
 
 export default function App() {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    // FEEDS YOUR LIVE SITE FROM SANITY
+    client.fetch(`*[_type == "product"]{title, price, "imageUrl": image.asset->url}`)
+      .then((data) => setProducts(data));
+  }, []);
 
   return (
-    <div className="min-h-screen selection:bg-gold selection:text-white">
-      {/* Progress Bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-[2px] bg-gold z-[60] origin-left"
-        style={{ scaleX }}
-      />
+    <div style={{ backgroundColor: '#0a0a0a', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'serif' }}>
+      <header style={{ textAlign: 'center', paddingBottom: '40px', borderBottom: '1px solid #c5a059' }}>
+        <h1 style={{ color: '#c5a059', fontSize: '2.5rem', letterSpacing: '2px' }}>BD LUXURY SCENTS</h1>
+        <p style={{ color: '#888', fontStyle: 'italic' }}>Premium Fragrances for the Elite</p>
+      </header>
 
-      <Navbar />
-      
-      <main>
-        <Hero />
-        
-        {/* Featured Quote Section */}
-        <section className="py-24 bg-background border-y border-gold/10">
-          <div className="container mx-auto px-6 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1 }}
-            >
-              <h2 className="text-3xl md:text-5xl font-heading italic max-w-4xl mx-auto leading-tight">
-                "A woman's perfume tells more about her than her handwriting."
-              </h2>
-              <p className="mt-8 text-xs uppercase tracking-[0.4em] text-gold">— Christian Dior</p>
-            </motion.div>
-          </div>
-        </section>
-
-        <ProductGrid />
-        <About />
-        
-        {/* Newsletter Section */}
-        <section className="py-32 bg-secondary text-foreground relative overflow-hidden border-y border-border">
-          <div className="container mx-auto px-10 relative z-10 text-center">
-            <span className="text-[10px] uppercase tracking-[4px] text-gold mb-8 block">
-              The Inner Circle
-            </span>
-            <h2 className="text-4xl md:text-6xl font-heading mb-10 font-light">Exclusive Access</h2>
-            <p className="max-w-xl mx-auto text-muted-foreground mb-12 tracking-[1px] font-light leading-[1.8]">
-              Subscribe to receive early access to new collections, private events, 
-              and olfactory insights from our master perfumers.
-            </p>
-            <form className="max-w-md mx-auto flex flex-col sm:flex-row gap-6">
-              <input
-                type="email"
-                placeholder="YOUR EMAIL ADDRESS"
-                className="flex-1 bg-transparent border-b border-border py-4 text-[11px] uppercase tracking-[2px] focus:border-gold outline-none transition-colors"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-transparent border border-foreground hover:bg-foreground hover:text-background text-foreground px-10 py-4 text-[11px] uppercase tracking-[2px] transition-all duration-500"
-              >
-                Subscribe
+      <main style={{ marginTop: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px' }}>
+          {products.length > 0 ? products.map((item, index) => (
+            <div key={index} style={{ border: '1px solid #222', padding: '20px', textAlign: 'center', transition: '0.3s' }}>
+              <img src={item.imageUrl} alt={item.title} style={{ width: '100%', height: '300px', objectFit: 'cover', marginBottom: '15px' }} />
+              <h3 style={{ color: '#c5a059' }}>{item.title}</h3>
+              <p style={{ fontSize: '1.2rem' }}>${item.price}</p>
+              <button style={{ backgroundColor: '#c5a059', color: 'black', border: 'none', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}>
+                PURCHASE NOW
               </button>
-            </form>
-          </div>
-        </section>
-
-        <Testimonials />
+            </div>
+          )) : (
+            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '50px' }}>
+              <p>Dashboard connected! Add your first scent in Sanity to see it here.</p>
+            </div>
+          )}
+        </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
